@@ -122,8 +122,3 @@ Please open an issue or submit a pull request for discussion.
 
 This project is solely developed **Dorna Raj Gyawali** <dronarajgyawali@gmail.com>  
 GitHub: [@dronarajgyawali](https://github.com/drona-gyawali)
-
-
----
-
-Let me know if you’d like to include a diagram illustrating how the thread pool distributes scanning tasks across multiple threads!
