@@ -34,8 +34,6 @@ const std::vector<std::pair<std::string, std::regex>> secret_patterns = {
     {"Google OAuth Access Token", std::regex(R"(ya29\.[0-9A-Za-z\-_]+)")},
     {"Azure Storage Key", std::regex(R"(DefaultEndpointsProtocol=https;AccountName=[^;]+;AccountKey=[^;]+;EndpointSuffix=core\.windows\.net)")},
     {"RabbitMQ URI", std::regex(R"(amqps?:\/\/[^:]+:[^@]+@[^\/\s:]+(:\d+)?(\/[^\s]*)?)")},
-    {"Celery Broker URL (AMQP)", std::regex(R"(amqps?:\/\/[^:]+:[^@]+@[^\/\s:]+(:\d+)?(\/[^\s]*)?)")},
     {"Celery Broker URL (Redis)", std::regex(R"(redis:\/\/:(.+)@[^\/\s:]+(:\d+)?(\/\d+)?)")},
-    {"etcd Basic Auth", std::regex(R"(https?:\/\/[^:]+:[^@]+@[^\/\s:]+(:\d+)?)")},
     {"Generic Private Key", std::regex(R"(-----BEGIN PRIVATE KEY-----)")},
 };

@@ -16,15 +16,14 @@
  * @author Dorna Raj Gyawali <dronarajgyawali@gmail.com>
  * @date 2025
  */
-/**/
 
 #include "scanner.h"
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
 #include <string>
+#include <sstream>
 
-#define SECERT "AKIAzgrtueruehfdjfdkfj"
 SecretScanner::SecretScanner(
     const std::unordered_set<std::string>& ignored_dirs_,
     const std::unordered_set<std::string>& valid_extensions_,
@@ -37,7 +36,7 @@ bool SecretScanner::is_ignored_dir(const fs::path& path) const {
     for (const auto& d : ignored_dirs) {
         if (path_str.find("/" + d + "/") != std::string::npos ||
             (path_str.size() >= d.size() + 1 &&
-            path_str.compare(path_str.size() - d.size() - 1, d.size() + 1, "/" + d) == 0)) {
+             path_str.compare(path_str.size() - d.size() - 1, d.size() + 1, "/" + d) == 0)) {
             return true;
         }
     }
@@ -53,10 +52,44 @@ bool SecretScanner::is_git_ignored(const std::string& file) const {
     return system(cmd.c_str()) == 0;
 }
 
+void SecretScanner::report_secret(const std::string& file_path, int line_number, 
+                                 const std::string& pattern_name, const std::string& match_str) const {
+    std::lock_guard<std::mutex> lock(output_mutex);
+    
+    // cleaning up the match string for JSON output
+    std::string cleaned_match = match_str;
+    
+    // replacing quotes and backslashes for JSON safety
+    std::stringstream ss;
+    for (char c : cleaned_match) {
+        if (c == '"') {
+            ss << "\\\"";
+        } else if (c == '\\') {
+            ss << "\\\\";
+        } else if (c == '\n') {
+            ss << "\\n";
+        } else if (c == '\r') {
+            ss << "\\r";
+        } else if (c == '\t') {
+            ss << "\\t";
+        } else {
+            ss << c;
+        }
+    }
+    cleaned_match = ss.str();
+    
+    std::cout << "{"
+              << R"("file":")" << file_path << "\","
+              << R"("line":)" << line_number << ","
+              << R"("type":")" << pattern_name << "\","
+              << R"("match":")" << cleaned_match << "\""
+              << "}" << std::endl;
+}
+
 void SecretScanner::scan_file(const std::string& file_path) const {
     std::ifstream file(file_path);
     if (!file.is_open()) {
-        std::cerr << "Failed to open file: " << file_path << std::endl;
+        // silently skip files that can't be opened (they might be binary or locked)
         return;
     }
 
@@ -65,16 +98,16 @@ void SecretScanner::scan_file(const std::string& file_path) const {
 
     while (std::getline(file, line)) {
         ++line_number;
+        
         for (const auto& [pattern_name, pattern] : secret_patterns) {
             std::smatch match;
-            if (std::regex_search(line, match, pattern)) {
+            std::string::const_iterator start = line.cbegin();
+            
+            // lets find all matches in the line
+            while (std::regex_search(start, line.cend(), match, pattern)) {
                 std::string match_str = match.str();
-                std::cout << "{"
-                        << R"("file":")" << file_path << "\","
-                        << R"("line":)" << line_number << ","
-                        << R"("type":")" << pattern_name << "\","
-                        << R"("match":")" << match_str << "\""
-                        << "}" << std::endl;
+                report_secret(file_path, line_number, pattern_name, match_str);
+                start = match.suffix().first;
             }
         }
     }
