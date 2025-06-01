@@ -64,6 +64,9 @@ make
 
 ---
 
+> <video controls src=" assets/video.mp4" title="Title"></video>
+
+---
 ## Running Tests
 
 ```bash
