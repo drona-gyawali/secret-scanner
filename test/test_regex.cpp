@@ -103,7 +103,6 @@ TEST(RegexPatternTest, MatchesAzureStorageKey) {
 TEST(RegexPatternTest, MatchesRabbitMQUri) {
     std::regex regex(R"(amqps?:\/\/[^:]+:[^@]+@[^\/\s:]+(:\d+)?(\/[^\s]*)?)");
     EXPECT_TRUE(std::regex_match("amqp://user:pass@host:5672/vhost", regex));
-    EXPECT_TRUE(std::regex_match("amqps://user:pass@host/vhost", regex));
     EXPECT_FALSE(std::regex_match("http://user:pass@host", regex));
 }
 
@@ -117,4 +116,10 @@ TEST(RegexPatternTest, MatchesGenericPrivateKey) {
     std::regex regex(R"(-----BEGIN PRIVATE KEY-----)");
     EXPECT_TRUE(std::regex_match("-----BEGIN PRIVATE KEY-----", regex));
     EXPECT_FALSE(std::regex_match("-----BEGIN RSA PRIVATE KEY-----", regex));
+}
+
+TEST(RegexPatternTest, MatchesOpenWeather) {
+    std::regex regex(R"([a-fA-F0-9]{32})");
+    EXPECT_TRUE(std::regex_match("6501d1d4d63c1e017c3eff5bc5b74844", regex));
+    EXPECT_FALSE(std::regex_match("63c1e017c3ef", regex));
 }

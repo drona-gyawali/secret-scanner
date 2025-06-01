@@ -1,0 +1,28 @@
+name: Run Tests Only
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y cmake g++ pthread
+
+    - name: Configure project with CMake
+      run: cmake -S . -B build
+
+    - name: Build test targets only
+      run: cmake --build build --target test_regex test_scanner
+
+    - name: Run tests
+      working-directory: build
+      run: ctest --output-on-failure

@@ -36,4 +36,5 @@ const std::vector<std::pair<std::string, std::regex>> secret_patterns = {
     {"RabbitMQ URI", std::regex(R"(amqps?:\/\/[^:]+:[^@]+@[^\/\s:]+(:\d+)?(\/[^\s]*)?)")},
     {"Celery Broker URL (Redis)", std::regex(R"(redis:\/\/:(.+)@[^\/\s:]+(:\d+)?(\/\d+)?)")},
     {"Generic Private Key", std::regex(R"(-----BEGIN PRIVATE KEY-----)")},
+    {"OpenWeather API Key", std::regex(R"([a-fA-F0-9]{32})")},
 };
