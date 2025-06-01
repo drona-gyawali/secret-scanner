@@ -21,7 +21,8 @@ jobs:
       run: cmake -S . -B build
 
     - name: Build test targets only
-      run: cmake --build build --target test_regex test_scanner
+      run: sudo apt-get update && sudo apt-get install -y cmake g++
+
 
     - name: Run tests
       working-directory: build
