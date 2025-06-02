@@ -64,8 +64,9 @@ make
 > If no path is provided, the scanner will use the default directory set in the source code.
 
 ---
+### 📽️ Click the video to see how it works
 
-> <video controls src=" assets/video.mp4" title="Title"></video>
+[![Watch the video](https://img.youtube.com/vi/EN5O6NBdU4o/maxresdefault.jpg)](https://www.youtube.com/watch?v=EN5O6NBdU4o)
 
 ---
 ## Running Tests
@@ -81,6 +82,21 @@ ctest
 ```
 
 > Tests are written using GoogleTest and verify the accuracy and reliability of secret detection.
+
+---
+### Usefulness
+
+**For Users & Developers**
+- Prevents accidental leaks of secrets like API keys, passwords, and tokens.
+- Integrates into development workflows (e.g., pre-commit hooks, CI/CD), saving time and reducing human error.
+- Makes open source contributions safer by scanning PRs for exposed credentials.
+- Helps developers comply with security best practices.
+
+**For Industry**
+- Reduces the risk of security breaches caused by leaked secrets in source code.
+- Automates a critical part of secure software development life cycle (SDLC).
+- Can be integrated into enterprise DevSecOps pipelines for continuous monitoring.
+- Minimizes potential damages, financial losses, and compliance violations.
 
 ---
 
@@ -124,5 +140,5 @@ Please open an issue or submit a pull request for discussion.
 
 ## Author
 
-This project is solely developed **Dorna Raj Gyawali** <dronarajgyawali@gmail.com>  
+This project is solely developed by **Dorna Raj Gyawali** <dronarajgyawali@gmail.com>  
 GitHub: [@dronarajgyawali](https://github.com/drona-gyawali)
