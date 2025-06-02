@@ -18,6 +18,7 @@
 
 ```
 secret-scanner/
+├── .github/workflows 
 ├── src/              # Source code
 ├── include/          # Header files
 ├── test/             # Unit tests
