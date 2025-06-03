@@ -26,5 +26,5 @@ jobs:
       run: cmake --build build --parallel
 
     - name: Run tests (auto-detect)
-      working-directory: build
+      working-directory: build/scanner-core
       run: ctest --output-on-failure --timeout 60
