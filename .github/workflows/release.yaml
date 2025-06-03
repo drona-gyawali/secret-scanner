@@ -11,7 +11,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - name: Checkout code
@@ -26,18 +26,10 @@ jobs:
       - name: Build
         run: cmake --build build --config Release
 
-      - name: Copy built binary (Linux & macOS)
-        if: runner.os != 'Windows'
+      - name: Copy built binary
         run: |
           mkdir -p dist
           cp build/scanner-core/secret_scanner dist/secret_scanner-${{ runner.os }}
-
-      - name: Copy built binary (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          mkdir dist
-          Copy-Item "build\scanner-core\secret_scanner.exe" -Destination "dist\secret_scanner-${{ runner.os }}.exe"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
