@@ -2,10 +2,13 @@
 /build/
 build
 node_modules
+
 # Ignore editor files
 .vscode/
 .idea/
 *.swp
+scanner-extension/out/
+
 
 # Ignore OS files
 .DS_Store
