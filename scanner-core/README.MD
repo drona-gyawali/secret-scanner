@@ -18,14 +18,25 @@
 
 ```
 secret-scanner/
-├── .github/workflows 
-├── src/              # Source code
-├── include/          # Header files
-├── test/             # Unit tests
-├── build/            # Build output (ignored by git)
-├── CMakeLists.txt    # Build configuration
-├── .gitignore        # Git ignore rules
-└── README.md         # Project documentation
+├── .github/workflows/             # CI/CD
+├── scanner-core/                  # C++ tool lives here
+│   ├── src/                       # C++ source code
+│   ├── include/                   # C++ headers
+│   ├── test/                      # Unit tests
+│   ├── build/                     # Build output (gitignored)
+│   ├── CMakeLists.txt             # CMake config (build from the root)
+│   └── README.md                  # C++ tool-specific README
+├── scanner-extension/             # VS Code extension lives here
+│   ├── src/                       # TypeScript source code
+│   ├── out/                       # Compiled JS (gitignored)
+│   ├── package.json               # Extension metadata
+│   ├── tsconfig.json              # TypeScript config
+│   ├── .vscodeignore              # For publishing
+│   └── README.md                  # Extension-specific README
+├── .gitignore
+├── README.md                      # Root project overview
+└── monorepo-config.md             # Optional docs or instructions
+
 ```
 
 ---
@@ -115,8 +126,18 @@ Example:
 ```bash
 ./secret_scanner https://github.com/user/repo-name
 ```
+---
+## VSCode Extension
 
-> I think I’ll need to hold off on the above plans for now due to my busy schedule.
+Install the extension from the VS Code Marketplace:
+
+<p align="center">
+  <a href="https://marketplace.visualstudio.com/items?itemName=drona-gyawali.secret-scanner-pro">
+    <img src="https://img.shields.io/badge/-Install%20Now-blue?logo=visualstudiocode&style=for-the-badge" alt="Install Secret Scanner Pro from Marketplace">
+  </a>
+</p>
+
+>  **To learn how to use this extension, please refer to the [Usage Section](https://marketplace.visualstudio.com/items?itemName=drona-gyawali.secret-scanner-pro)**.
 
 ---
 

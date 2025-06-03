@@ -1,0 +1,150 @@
+{
+  "name": "secret-scanner-pro",
+  "displayName": "Secret Scanner",
+  "description": "Advanced security tool for detecting API keys, tokens, and secrets in your codebase",
+  "version": "1.0.0",
+  "publisher": "drona-gyawali",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Linters",
+    "Other",
+    "Testing"
+  ],
+  "keywords": [
+    "security",
+    "secrets",
+    "api-keys",
+    "tokens",
+    "scanner",
+    "vulnerabilities"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "icon": "icon/image.png",
+  "contributes": {
+    "commands": [
+      {
+        "command": "secret-scanner.scan",
+        "title": "Scan for Secrets",
+        "category": "Secret Scanner"
+      },
+      {
+        "command": "secret-scanner.scanWorkspace",
+        "title": "Scan Workspace for Secrets",
+        "category": "Secret Scanner"
+      },
+      {
+        "command": "secret-scanner.clearResults",
+        "title": "Clear Scan Results",
+        "category": "Secret Scanner"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "secret-scanner.scan",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "secret-scanner.scanWorkspace",
+          "when": "workspaceFolderCount > 0"
+        },
+        {
+          "command": "secret-scanner.clearResults"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "secret-scanner.scan",
+          "group": "security",
+          "when": "explorerResourceIsFolder",
+          "icon": "$(shield)"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "secret-scanner.scan",
+          "group": "security",
+          "icon": "$(shield)"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Secret Scanner",
+      "properties": {
+        "secret-scanner.autoScanOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically scan for secrets when files are saved"
+        },
+        "secret-scanner.scanOnStartup": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically scan workspace on startup"
+        },
+        "secret-scanner.showNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show notification messages for scan results"
+        },
+        "secret-scanner.customScannerPath": {
+          "type": "string",
+          "default": "",
+          "description": "Custom path to the secret scanner executable (leave empty for auto-detection)"
+        }
+      }
+    },
+    "problemMatchers": [
+      {
+        "name": "secret-scanner",
+        "owner": "secret-scanner",
+        "fileLocation": "relative",
+        "pattern": {
+          "regexp": "^(.+):(\\d+):(\\d+):\\s+(warning|error):\\s+(.+)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "message": 5
+        }
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "npx @vscode/vsce package",
+    "publish": "npx @vscode/vsce publish"
+  },
+  
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "@typescript-eslint/eslint-plugin": "^5.45.0",
+    "@typescript-eslint/parser": "^5.45.0",
+    "eslint": "^8.28.0",
+    "typescript": "^4.9.4",
+    "@vscode/test-electron": "^2.2.0",
+    "vsce": "^2.15.0"
+  },
+  "dependencies": {
+    "child_process": "^1.0.2"
+  },
+  "license": "Apache 2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/drona-gyawali/secret-scanner.git"
+  },
+  "bugs": {
+    "url": "https://github.com/drona-gyawali/secret-scanner/issues"
+  },
+  "homepage": "https://github.com/drona-gyawali/secret-scanner#readme"
+}
