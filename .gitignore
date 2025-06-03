@@ -1,7 +1,7 @@
 # Ignore build directory
 /build/
 build
-
+node_modules
 # Ignore editor files
 .vscode/
 .idea/
@@ -10,6 +10,7 @@ build
 # Ignore OS files
 .DS_Store
 Thumbs.db
+.env
 
 # Ignore compiled binaries (if any outside build/)
 *.exe
@@ -19,3 +20,6 @@ Thumbs.db
 # Ignore logs and temporary files
 *.log
 *.tmp
+
+#Extension file
+secret-scanner-pro-1.0.0.vsix
