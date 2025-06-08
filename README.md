@@ -4,31 +4,6 @@ Secret Scanner is an advanced security toolkit designed to detect hardcoded secr
 
 ---
 
-## Monorepo Structure
-
-```
-secret-scanner/
-├── .github/workflows/             # CI/CD GitHub Actions for building/testing
-├── scanner-core/                  # C++ command-line scanning engine
-│   ├── src/                       # C++ source code
-│   ├── include/                   # Header files
-│   ├── test/                      # Unit tests using C++ framework
-│   ├── build/                     # CMake build output (gitignored)
-│   ├── CMakeLists.txt             # CMake build config
-│   └── README.md                  # CLI tool usage and build instructions
-├── scanner-extension/            # VS Code extension frontend
-│   ├── src/                       # TypeScript source code
-│   ├── out/                       # Compiled JavaScript (ignored in git)
-│   ├── package.json               # Extension manifest
-│   ├── tsconfig.json              # TypeScript compiler options
-│   ├── .vscodeignore              # VSCE publishing ignore rules
-│   └── README.md                  # Extension-specific usage instructions
-├── .gitignore                     # Git ignored files
-├── README.md                      # Project overview (you are here)
-```
-
----
-
 ## Why Two Parts?
 
 * **`scanner-core`** is written in C++ for performance. It can be used independently in CI/CD, Docker, or custom tooling.
@@ -63,12 +38,22 @@ Now you can run it globally:
 
 ```bash
 secret_scanner --help
+
+Examples:
+  ./scanner                   # Scan current 'src/' directory
+  ./scanner /path/to/code     # Scan specific directory
+  ./scanner .                 # Scan current directory
+  ./scanner ../project        # Scan relative path
+
 ```
 
 > **Note**: The instructions provided here are for Linux systems. If you are using Windows or macOS, please configure the build process accordingly based on your operating system’s CMake and compiler tools.
 ---
 
 ### Install VSCode Extension
+
+> **Note:** Please set up the project locally and make it globally accessible on your system. Kindly avoid using binary files, as there are known issues in VS Code when parsing them. After setting it up locally, you can use the VS Code extension without any errors. We apologize for the inconvenience.
+
 
 You can install the VS Code extension from the Marketplace:
 
