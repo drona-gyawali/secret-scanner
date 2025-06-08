@@ -123,3 +123,78 @@ TEST(RegexPatternTest, MatchesOpenWeather) {
     EXPECT_TRUE(std::regex_match("6501d1d4d63c1e017c3eff5bc5b74844", regex));
     EXPECT_FALSE(std::regex_match("63c1e017c3ef", regex));
 }
+
+TEST(RegexPatternTest, MatchesCloudinaryAPIKey) {
+    std::regex regex(R"([0-9a-zA-Z]{15})");
+    EXPECT_TRUE(std::regex_match("AbCdEfGhIjKlMno", regex));
+    EXPECT_FALSE(std::regex_match("AbCdEfGhIjKlMn", regex));
+}
+
+TEST(RegexPatternTest, MatchesMistralAPIKey) {
+    std::regex regex(R"(mistral-[a-zA-Z0-9]{40,})");
+    EXPECT_TRUE(std::regex_match("mistral-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN1234567890", regex));
+    EXPECT_FALSE(std::regex_match("mistral-abc123", regex));
+}
+
+TEST(RegexPatternTest, MatchesCohereAPIKey_Unique) {
+    std::regex regex(R"(Cohere-[a-zA-Z0-9]{30,50})");
+    EXPECT_TRUE(std::regex_match("Cohere-abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMN", regex));
+    EXPECT_FALSE(std::regex_match("Cohere-abc123", regex));
+}
+
+TEST(RegexPatternTest, MatchesHuggingFaceAPIToken) {
+    std::regex regex(R"(hf_[a-zA-Z0-9]{64})");
+    EXPECT_TRUE(std::regex_match("hf_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ123456789012", regex));
+    EXPECT_FALSE(std::regex_match("hf_abc123", regex));
+}
+
+TEST(RegexPatternTest, MatchesOpenAIAPIKey) {
+    std::regex regex(R"(sk-[a-zA-Z0-9]{48})");
+    std::string valid = "sk-abcdefghijklmnopqrstuvwxyzABCD1234567890abcdEFGH";
+    std::string invalid = "sk-abc123";
+    EXPECT_TRUE(std::regex_match(valid, regex));
+    EXPECT_FALSE(std::regex_match(invalid, regex));
+}
+TEST(RegexPatternTest, MatchesAnthropicAPIKey) {
+    std::regex regex(R"(sk-ant-[a-zA-Z0-9]{40})");
+    std::string valid = "sk-ant-AbCdEfGhIjKlMnOpQrStUvWxYz1234567890ABCD";
+    std::string invalid = "sk-ant-abc123";
+    EXPECT_TRUE(std::regex_match(valid, regex));
+    EXPECT_FALSE(std::regex_match(invalid, regex));
+}
+
+TEST(RegexPatternTest, MatchesGoogleGeminiAPIKey) {
+    std::regex regex(R"(AIza[0-9A-Za-z\-_]{35})");
+    std::string valid = "AIzaabcdefghijklmnopqrstuvwxyzABCDE1234";
+    std::string invalid = "AIzaSyA-abc";
+    EXPECT_TRUE(std::regex_match(valid, regex));
+    EXPECT_FALSE(std::regex_match(invalid, regex));
+}
+
+TEST(RegexPatternTest, MatchesFirebaseAPIKey) {
+    std::regex regex(R"(AIza[0-9A-Za-z\-_]{35})");
+    std::string valid = "AIzaabcdefghijklmnopqrstuvwxyzABCDE1234";
+    std::string invalid = "AIzaSyA-abc";
+    EXPECT_TRUE(std::regex_match(valid, regex));
+    EXPECT_FALSE(std::regex_match(invalid, regex));
+}
+
+
+TEST(RegexPatternTest, MatchesClerkPublishableKey) {
+    std::regex regex(R"(pk_live_[a-zA-Z0-9]{20,})");
+    EXPECT_TRUE(std::regex_match("pk_live_abcdefghijklmnopqrstuvwxyz123456", regex));
+    EXPECT_FALSE(std::regex_match("pk_live_abc123", regex));
+}
+
+TEST(RegexPatternTest, MatchesClerkSecretKey) {
+    std::regex regex(R"(sk_live_[a-zA-Z0-9]{20,})");
+    EXPECT_TRUE(std::regex_match("sk_live_abcdefghijklmnopqrstuvwxyz123456", regex));
+    EXPECT_FALSE(std::regex_match("sk_live_abc123", regex));
+}
+
+TEST(RegexPatternTest, MatchesSupabaseAPIKey) {
+    std::regex regex(R"([A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+)");
+    EXPECT_TRUE(std::regex_match("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c", regex));
+    EXPECT_FALSE(std::regex_match("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9", regex));
+}
+
