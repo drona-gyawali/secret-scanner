@@ -36,12 +36,12 @@ interface BinaryInfo {
 const BINARY_INFO: { [key: string]: BinaryInfo } = {
     'linux': {
         name: 'secret_scanner-Linux',
-        sha256: '0ac9f272eb9d7e073b8013516c4cc464941b89f1c1aef10696dd4754518d73b6',
+        sha256: '8aa89b122b81a4e6598fb3e697c01636abd18804e1f35e3945c5886e5ca74a37',
         downloadUrl: 'https://github.com/drona-gyawali/secret-scanner/releases/latest/download/secret_scanner-Linux'
     },
     'darwin': {
         name: 'secret_scanner-macOS',
-        sha256: '580f8d343c2732ef373abe75c1d5227d71a7ac866b5acebe30233ec55c4e2380',
+        sha256: '37e6b15f1bee9ae81f166c3ec9d7a6b83e7104ed363ac87052944a3ee2cd788d',
         downloadUrl: 'https://github.com/drona-gyawali/secret-scanner/releases/latest/download/secret_scanner-macOS'
     }
 };
