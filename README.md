@@ -47,12 +47,12 @@ Examples:
 
 ```
 
-> **Note**: The instructions provided here are for Linux systems. If you are using Windows or macOS, please configure the build process accordingly based on your operating system’s CMake and compiler tools.
+> **Note**: The instructions provided here are for Linux systems. If you are using Windows, please configure the build process accordingly based on your operating system’s CMake and compiler tools.
 ---
 
 ### Install VSCode Extension
 
-> **Note:** Please set up the project locally and make it globally accessible on your system. Kindly avoid using binary files, as there are known issues in VS Code when parsing them. After setting it up locally, you can use the VS Code extension without any errors. We apologize for the inconvenience.
+> **Note:** Currently supported only on **Linux** and **macOS**. Prebuilt binaries are provided for these platforms. For windows setup the project and run locally.
 
 
 You can install the VS Code extension from the Marketplace:

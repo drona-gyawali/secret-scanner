@@ -14,33 +14,6 @@
 
 ---
 
-## Project Structure
-
-```
-secret-scanner/
-├── .github/workflows/             # CI/CD
-├── scanner-core/                  # C++ tool lives here
-│   ├── src/                       # C++ source code
-│   ├── include/                   # C++ headers
-│   ├── test/                      # Unit tests
-│   ├── build/                     # Build output (gitignored)
-│   ├── CMakeLists.txt             # CMake config (build from the root)
-│   └── README.md                  # C++ tool-specific README
-├── scanner-extension/             # VS Code extension lives here
-│   ├── src/                       # TypeScript source code
-│   ├── out/                       # Compiled JS (gitignored)
-│   ├── package.json               # Extension metadata
-│   ├── tsconfig.json              # TypeScript config
-│   ├── .vscodeignore              # For publishing
-│   └── README.md                  # Extension-specific README
-├── .gitignore
-├── README.md                      # Root project overview
-└── monorepo-config.md             # Optional docs or instructions
-
-```
-
----
-
 ## Requirements
 
 * C++17 or higher

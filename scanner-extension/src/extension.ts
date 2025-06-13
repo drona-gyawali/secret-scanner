@@ -1,6 +1,20 @@
+/**
+* @file extension.ts
+* @brief VSCode extension for automated secret scanning with binary management.
+* 
+* Provides seamless secret detection by automatically downloading and managing
+* scanner binaries. Includes progress tracking, integrity verification, and
+* global installation support for Linux and macOS platforms.
+* 
+* @author Dorna Raj Gyawali <dronarajgyawali@gmail.com>
+* @date 2025
+*/
+
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as https from 'https';
+import * as crypto from 'crypto';
 import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
 
@@ -12,6 +26,25 @@ interface SecretMatch {
     type: string;
     match: string;
 }
+
+interface BinaryInfo {
+    name: string;
+    sha256: string;
+    downloadUrl: string;
+}
+
+const BINARY_INFO: { [key: string]: BinaryInfo } = {
+    'linux': {
+        name: 'secret_scanner-Linux',
+        sha256: '0ac9f272eb9d7e073b8013516c4cc464941b89f1c1aef10696dd4754518d73b6',
+        downloadUrl: 'https://github.com/drona-gyawali/secret-scanner/releases/latest/download/secret_scanner-Linux'
+    },
+    'darwin': {
+        name: 'secret_scanner-macOS',
+        sha256: '580f8d343c2732ef373abe75c1d5227d71a7ac866b5acebe30233ec55c4e2380',
+        downloadUrl: 'https://github.com/drona-gyawali/secret-scanner/releases/latest/download/secret_scanner-macOS'
+    }
+};
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('Secret Scanner extension is now active');
@@ -30,12 +63,12 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(statusBarItem);
 
     const scanCommand = vscode.commands.registerCommand('secret-scanner.scan', async () => {
-        await runSecretScanner(diagnosticCollection, outputChannel, statusBarItem);
+        await runSecretScanner(diagnosticCollection, outputChannel, statusBarItem, context);
     });
     context.subscriptions.push(scanCommand);
 
     const scanWorkspaceCommand = vscode.commands.registerCommand('secret-scanner.scanWorkspace', async () => {
-        await runSecretScanner(diagnosticCollection, outputChannel, statusBarItem);
+        await runSecretScanner(diagnosticCollection, outputChannel, statusBarItem, context);
     });
     context.subscriptions.push(scanWorkspaceCommand);
 
@@ -51,21 +84,22 @@ export function activate(context: vscode.ExtensionContext) {
     const autoScanOnSave = vscode.workspace.onDidSaveTextDocument(async (document) => {
         const config = vscode.workspace.getConfiguration('secret-scanner');
         if (config.get('autoScanOnSave', false)) {
-            await runSecretScanner(diagnosticCollection, outputChannel, statusBarItem);
+            await runSecretScanner(diagnosticCollection, outputChannel, statusBarItem, context);
         }
     });
     context.subscriptions.push(autoScanOnSave);
 
     const config = vscode.workspace.getConfiguration('secret-scanner');
     if (config.get('scanOnStartup', false)) {
-        setTimeout(() => runSecretScanner(diagnosticCollection, outputChannel, statusBarItem), 2000);
+        setTimeout(() => runSecretScanner(diagnosticCollection, outputChannel, statusBarItem, context), 2000);
     }
 }
 
 async function runSecretScanner(
     diagnosticCollection: vscode.DiagnosticCollection,
     outputChannel: vscode.OutputChannel,
-    statusBarItem: vscode.StatusBarItem
+    statusBarItem: vscode.StatusBarItem,
+    context: vscode.ExtensionContext
 ) {
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
     if (!workspaceFolder) {
@@ -85,29 +119,9 @@ async function runSecretScanner(
     outputChannel.appendLine('-'.repeat(60));
 
     try {
-        const scannerPath = await findScannerExecutable(workspaceFolder.uri.fsPath);
+        const scannerPath = await ensureScannerExecutable(context, outputChannel);
         if (!scannerPath) {
-            const choice = await vscode.window.showErrorMessage(
-                'Secret Scanner executable not found. Would you like to:',
-                'Show Debug Info',
-                'Download Pre-built',
-                'Build Instructions'
-            );
-            
-            if (choice === 'Show Debug Info') {
-                vscode.commands.executeCommand('workbench.action.output.toggleOutput');
-                const debugChannel = vscode.window.createOutputChannel('Secret Scanner Debug');
-                debugChannel.show();
-            } else if (choice === 'Download Pre-built') {
-                vscode.env.openExternal(vscode.Uri.parse('https://github.com/drona-gyawali/secret-scanner/releases'));
-            } else if (choice === 'Build Instructions') {
-                vscode.window.showInformationMessage(
-                    'To build the scanner:\n1. cd scanner-core\n2. mkdir build && cd build\n3. cmake ..\n4. make',
-                    { modal: true }
-                );
-            }
-            
-            throw new Error('Secret scanner executable not found. Check the debug output for detailed information.');
+            throw new Error('Failed to obtain secret scanner executable');
         }
 
         outputChannel.appendLine(`Using scanner: ${scannerPath}`);
@@ -140,108 +154,285 @@ async function runSecretScanner(
     }
 }
 
-async function findScannerExecutable(workspacePath: string): Promise<string | null> {
-    const outputChannel = vscode.window.createOutputChannel('Secret Scanner Debug');
-    
+async function ensureScannerExecutable(
+    context: vscode.ExtensionContext,
+    outputChannel: vscode.OutputChannel
+): Promise<string | null> {
+    //  checking  if scanner is globally available
+    const globalScanner = await findGlobalScanner();
+    if (globalScanner) {
+        outputChannel.appendLine(`Found global scanner: ${globalScanner}`);
+        return globalScanner;
+    }
+
+    // check  if we have a local copy in extension storage
+    const localScanner = await findLocalScanner(context);
+    if (localScanner) {
+        outputChannel.appendLine(`Found local scanner: ${localScanner}`);
+        return localScanner;
+    }
+    // downlaoding the scanner 
+    outputChannel.appendLine('Scanner not found. Downloading...');
+    return await downloadAndInstallScanner(context, outputChannel);
+}
+
+async function findGlobalScanner(): Promise<string | null> {
     try {
         const { stdout } = await execAsync('which secret_scanner || where secret_scanner 2>/dev/null', { timeout: 5000 });
         if (stdout.trim()) {
-            outputChannel.appendLine(`Found scanner in PATH: ${stdout.trim()}`);
             return 'secret_scanner';
         }
     } catch (error) {
-        outputChannel.appendLine(`Scanner not in PATH: ${error}`);
+        // Scanner not in PATH
     }
 
-    const extensionPath = vscode.extensions.getExtension('your-publisher.secret-scanner')?.extensionPath;
-    if (extensionPath) {
-        const platform = process.platform;
-        let binaryName = 'secret_scanner';
-        if (platform === 'win32') binaryName = 'secret_scanner.exe';
-        
-        const bundledPath = path.join(extensionPath, 'binaries', platform, binaryName);
-        if (fs.existsSync(bundledPath)) {
-            outputChannel.appendLine(`Found bundled scanner: ${bundledPath}`);
-            if (platform !== 'win32') {
-                try {
-                    fs.chmodSync(bundledPath, '755');
-                } catch {}
-            }
-            return bundledPath;
-        }
-    }
-
-    const possiblePaths = [
-        path.join(workspacePath, 'scanner-core', 'build', 'secret_scanner'),
-        path.join(workspacePath, 'scanner-core', 'build', 'secret_scanner.exe'),
-        path.join(workspacePath, 'scanner-core', 'build', 'Release', 'secret_scanner.exe'),
-        path.join(workspacePath, 'scanner-core', 'build', 'Debug', 'secret_scanner.exe'),
-        path.join(workspacePath, 'build', 'secret_scanner'),
-        path.join(workspacePath, 'build', 'secret_scanner.exe'),
-        path.join(workspacePath, 'secret_scanner'),
-        path.join(workspacePath, 'secret_scanner.exe'),
-        
-        path.join(path.dirname(workspacePath), 'scanner-core', 'build', 'secret_scanner'),
-        path.join(path.dirname(workspacePath), 'scanner-core', 'build', 'secret_scanner.exe'),
-        path.join(path.dirname(workspacePath), 'build', 'secret_scanner'),
-        path.join(path.dirname(workspacePath), 'build', 'secret_scanner.exe'),
-        
-        path.join(require('os').homedir(), 'secret-scanner', 'scanner-core', 'build', 'secret_scanner'),
-        path.join(require('os').homedir(), 'secret-scanner', 'build', 'secret_scanner'),
-        
+    // checking  common installation paths: Assumation based 
+    // TODO: if this extension get 50 install i will work on it fro robustness for now ok.
+    const globalPaths = [
         '/usr/local/bin/secret_scanner',
-        '/usr/bin/secret_scanner'
+        '/usr/bin/secret_scanner',
+        path.join(require('os').homedir(), '.local/bin/secret_scanner'),
+        path.join(require('os').homedir(), 'bin/secret_scanner')
     ];
 
-    outputChannel.appendLine(`Searching for scanner in ${possiblePaths.length} locations...`);
-    
-    for (const scannerPath of possiblePaths) {
-        outputChannel.appendLine(`Checking: ${scannerPath}`);
+    for (const scannerPath of globalPaths) {
         if (fs.existsSync(scannerPath)) {
-            outputChannel.appendLine(`Found scanner: ${scannerPath}`);
-            // Make executable if needed
-            if (process.platform !== 'win32') {
-                try {
-                    fs.chmodSync(scannerPath, '755');
-                } catch {}
-            }
             return scannerPath;
         }
     }
 
-    outputChannel.appendLine(`Scanner not found in any location`);
-    outputChannel.appendLine(`Workspace path: ${workspacePath}`);
-    outputChannel.appendLine(`Platform: ${process.platform}`);
-    outputChannel.appendLine(`Home directory: ${require('os').homedir()}`);
+    return null;
+}
+
+async function findLocalScanner(context: vscode.ExtensionContext): Promise<string | null> {
+    const platform = getPlatform();
+    if (!platform) return null;
+
+    const localBinaryPath = path.join(context.globalStorageUri.fsPath, 'binaries', 'secret_scanner');
     
-    outputChannel.appendLine(`\nAvailable directories in workspace:`);
-    try {
-        const items = fs.readdirSync(workspacePath);
-        for (const item of items) {
-            const itemPath = path.join(workspacePath, item);
-            if (fs.statSync(itemPath).isDirectory()) {
-                outputChannel.appendLine(`Directory: ${item}`);
-                
-                if (item === 'scanner-core') {
-                    const buildPath = path.join(itemPath, 'build');
-                    if (fs.existsSync(buildPath)) {
-                        outputChannel.appendLine(`Build directory exists`);
-                        const buildItems = fs.readdirSync(buildPath);
-                        for (const buildItem of buildItems) {
-                            outputChannel.appendLine(`Build item: ${buildItem}`);
-                        }
-                    } else {
-                        outputChannel.appendLine(`Build directory not found`);
-                    }
+    if (fs.existsSync(localBinaryPath)) {
+        // Verify the binary integrity
+        const isValid = await verifyBinaryIntegrity(localBinaryPath, platform);
+        if (isValid) {
+            // Ensure it's executable
+            if (process.platform !== 'win32') {
+                try {
+                    fs.chmodSync(localBinaryPath, '755');
+                } catch (error) {
+                    console.error('Failed to make binary executable:', error);
                 }
             }
+            return localBinaryPath;
+        } else {
+            // Remove corrupted binary
+            try {
+                fs.unlinkSync(localBinaryPath);
+            } catch (error) {
+                console.error('Failed to remove corrupted binary:', error);
+            }
         }
-    } catch (error) {
-        outputChannel.appendLine(`Error listing directories: ${error}`);
     }
-    
-    outputChannel.show();
+
     return null;
+}
+
+function getPlatform(): string | null {
+    const platform = process.platform;
+    if (platform === 'linux') return 'linux';
+    if (platform === 'darwin') return 'darwin';
+    // Windows not supported yet based on your binary list
+    return null;
+}
+
+async function downloadAndInstallScanner(
+    context: vscode.ExtensionContext,
+    outputChannel: vscode.OutputChannel
+): Promise<string | null> {
+    const platform = getPlatform();
+    if (!platform) {
+        const message = 'Secret Scanner is not available for your platform yet. Currently supported: Linux, macOS';
+        outputChannel.appendLine(message);
+        vscode.window.showWarningMessage(message + '. Would you like to visit the releases page?', 'Open Releases')
+            .then(choice => {
+                if (choice === 'Open Releases') {
+                    vscode.env.openExternal(vscode.Uri.parse('https://github.com/drona-gyawali/secret-scanner/releases'));
+                }
+            });
+        return null;
+    }
+
+    const binaryInfo = BINARY_INFO[platform];
+    const storageDir = path.join(context.globalStorageUri.fsPath, 'binaries');
+    const binaryPath = path.join(storageDir, 'secret_scanner');
+
+    try {
+        // Create storage directory
+        if (!fs.existsSync(storageDir)) {
+            fs.mkdirSync(storageDir, { recursive: true });
+        }
+
+        outputChannel.appendLine(`Downloading ${binaryInfo.name}...`);
+        
+        // Show progress to user
+        await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            title: 'Secret Scanner',
+            cancellable: false
+        }, async (progress) => {
+            progress.report({ message: 'Downloading scanner binary...' });
+            
+            await downloadFile(binaryInfo.downloadUrl, binaryPath, (downloaded, total) => {
+                const percentage = total > 0 ? Math.round((downloaded / total) * 100) : 0;
+                progress.report({ 
+                    message: `Downloading... ${percentage}%`,
+                    increment: percentage
+                });
+            });
+
+            progress.report({ message: 'Verifying download...' });
+            
+            // Verify the downloaded file
+            const isValid = await verifyBinaryIntegrity(binaryPath, platform);
+            if (!isValid) {
+                fs.unlinkSync(binaryPath);
+                throw new Error('Downloaded binary failed integrity check');
+            }
+
+            // Make executable on Unix systems
+            if (process.platform !== 'win32') {
+                fs.chmodSync(binaryPath, '755');
+            }
+
+            progress.report({ message: 'Installing globally...' });
+            
+            // Try to install globally (optional)
+            await tryInstallGlobally(binaryPath, outputChannel);
+        });
+
+        outputChannel.appendLine(`Successfully downloaded and installed scanner to: ${binaryPath}`);
+        vscode.window.showInformationMessage('Secret Scanner binary downloaded and ready to use!');
+        
+        return binaryPath;
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        outputChannel.appendLine(`Failed to download scanner: ${errorMessage}`);
+        
+        // Offer manual download option
+        const choice = await vscode.window.showErrorMessage(
+            'Failed to automatically download Secret Scanner. Would you like to download manually?',
+            'Open Releases Page',
+            'Retry Download'
+        );
+        
+        if (choice === 'Open Releases Page') {
+            vscode.env.openExternal(vscode.Uri.parse('https://github.com/drona-gyawali/secret-scanner/releases'));
+        } else if (choice === 'Retry Download') {
+            return await downloadAndInstallScanner(context, outputChannel);
+        }
+        
+        return null;
+    }
+}
+
+async function downloadFile(
+    url: string, 
+    destination: string, 
+    onProgress?: (downloaded: number, total: number) => void
+): Promise<void> {
+    return new Promise((resolve, reject) => {
+        const file = fs.createWriteStream(destination);
+        let downloaded = 0;
+
+        const request = https.get(url, (response) => {
+            if (response.statusCode === 302 || response.statusCode === 301) {
+                // Handle redirect
+                const redirectUrl = response.headers.location;
+                if (redirectUrl) {
+                    file.close();
+                    fs.unlinkSync(destination);
+                    downloadFile(redirectUrl, destination, onProgress).then(resolve).catch(reject);
+                    return;
+                }
+            }
+
+            if (response.statusCode !== 200) {
+                file.close();
+                fs.unlinkSync(destination);
+                reject(new Error(`Download failed with status: ${response.statusCode}`));
+                return;
+            }
+
+            const totalSize = parseInt(response.headers['content-length'] || '0', 10);
+
+            response.on('data', (chunk) => {
+                downloaded += chunk.length;
+                if (onProgress) {
+                    onProgress(downloaded, totalSize);
+                }
+            });
+
+            response.pipe(file);
+
+            file.on('finish', () => {
+                file.close();
+                resolve();
+            });
+
+            file.on('error', (error) => {
+                file.close();
+                fs.unlinkSync(destination);
+                reject(error);
+            });
+        });
+
+        request.on('error', (error) => {
+            file.close();
+            fs.unlinkSync(destination);
+            reject(error);
+        });
+
+        request.setTimeout(60000, () => {
+            request.destroy();
+            file.close();
+            fs.unlinkSync(destination);
+            reject(new Error('Download timeout'));
+        });
+    });
+}
+
+async function verifyBinaryIntegrity(filePath: string, platform: string): Promise<boolean> {
+    try {
+        const expectedHash = BINARY_INFO[platform].sha256;
+        const fileBuffer = fs.readFileSync(filePath);
+        const actualHash = crypto.createHash('sha256').update(fileBuffer).digest('hex');
+        return actualHash === expectedHash;
+    } catch (error) {
+        console.error('Failed to verify binary integrity:', error);
+        return false;
+    }
+}
+
+async function tryInstallGlobally(binaryPath: string, outputChannel: vscode.OutputChannel): Promise<void> {
+    try {
+        const globalBinDir = path.join(require('os').homedir(), '.local/bin');
+        const globalBinaryPath = path.join(globalBinDir, 'secret_scanner');
+
+        // Create bin directory if it doesn't exist
+        if (!fs.existsSync(globalBinDir)) {
+            fs.mkdirSync(globalBinDir, { recursive: true });
+        }
+
+        // Copy binary to global location
+        fs.copyFileSync(binaryPath, globalBinaryPath);
+        fs.chmodSync(globalBinaryPath, '755');
+
+        outputChannel.appendLine(`Installed globally to: ${globalBinaryPath}`);
+        outputChannel.appendLine('Note: Add ~/.local/bin to your PATH to use "secret_scanner" command globally');
+
+    } catch (error) {
+        outputChannel.appendLine(`Could not install globally (this is optional): ${error}`);
+    }
 }
 
 function cleanOutputLine(line: string): string {
