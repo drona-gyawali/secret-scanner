@@ -1,4 +1,6 @@
-# secret-scanner
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/c3c1121b-e3d0-44bd-a3f9-18b55c5ca61b" alt="Secret Scanner" width="250"/>
+</p>
 
 Secret Scanner is an advanced security toolkit designed to detect hardcoded secrets like API keys, tokens, and credentials in your source code. It combines a powerful C++ scanning engine (`scanner-core`) with a user-friendly **Visual Studio Code extension** (`scanner-extension`) to provide both CLI and GUI interfaces.
 
