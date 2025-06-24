@@ -27,5 +27,5 @@ const std::unordered_set<std::string> ignored_dirs = {
     ".svn", ".hg", ".tox", ".mypy_cache", ".pytest_cache", "coverage","logs", 
     "tmp", "temp", "cache", ".DS_Store", "ruff_cache", "migrations","migration",
     ".gradle", ".settings", ".classpath", ".project", "bin", "gen", 
-    ".metadata", ".nb-gradle", ".nbproject"
+    ".metadata", ".nb-gradle", ".nbproject", ".toml", ".lock"
 };
