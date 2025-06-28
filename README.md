@@ -1,3 +1,5 @@
+> This project has been developed as a part of my second semester academic curriculum under the course Object-Oriented Programming with C++.
+
 <p align="center">
   <img src="https://github.com/user-attachments/assets/c3c1121b-e3d0-44bd-a3f9-18b55c5ca61b" alt="Secret Scanner" width="250"/>
 </p>
