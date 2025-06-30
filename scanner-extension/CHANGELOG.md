@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.0.1] - 2025-06-30
+### Added
+- 20+ new secret regex patterns to improve scanning accuracy
+
+### Fixed
+- Bug fixes improving stability and secret detection reliability
+
 ## [2.0.0] - 2025-06-13
 ### Added
 - **Automatic Binary Download**: Extension now automatically downloads scanner binaries when not found
