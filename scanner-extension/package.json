@@ -2,7 +2,7 @@
   "name": "secret-scanner-pro",
   "displayName": "Secret Scanner",
   "description": "Advanced security tool for detecting API keys, tokens, and secrets in your codebase",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "publisher": "drona-gyawali",
   "engines": {
     "vscode": "^1.74.0"
