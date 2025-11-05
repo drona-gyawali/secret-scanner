@@ -55,6 +55,10 @@ Examples:
 ---
 
 ### Install VSCode Extension
+---
+<img width="519" height="172" alt="image" src="https://github.com/user-attachments/assets/c69d03cd-d7f2-4029-afd7-1661ae880fe7" />
+
+---
 
 > **Note:** Currently supported only on **Linux** and **macOS**. Prebuilt binaries are provided for these platforms. For windows setup the project and run locally.
 
